@@ -175,10 +175,13 @@ package social.gateway
 		}
 		private static function _createPaginationHandler(parser:Function=null, dataProp:String=null, pagProp:String=null, errorResponseCheck:Function=null, addTo:Array=null, onMainComplete:Function=null):Function
 		{
-			return function(success:String, fail:*, onComplete:Function=null):void{
+			var args:Array = [];
+			if(onMainComplete!=null)args.push(onMainComplete);
+			args.push(addTo);
+			
+			return closure(function(success:String, fail:*, onComplete:Function=null, addTo:Array=null):void{
 				if(!addTo)addTo = [];
 				
-				if(onMainComplete!=null)onComplete = onMainComplete;
 				if(fail){
 					if(onComplete!=null)onComplete(null, fail || true);
 				}else{
@@ -206,7 +209,7 @@ package social.gateway
 						loadPage(nextPage, _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck, addTo, onComplete));
 					}
 				}
-			}
+			}, args, true );
 		}
 		
 		private static function defaultErrorResponseCheck(response:Object):Boolean{
