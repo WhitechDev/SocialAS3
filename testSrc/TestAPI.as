@@ -27,9 +27,7 @@ package
 	import social.desc.ArgDesc;
 	import social.desc.CallDesc;
 	import social.dropbox.DropboxPlatform;
-	import social.fb.Facebook;
 	import social.fb.FacebookMobileFP;
-	import social.fb.FacebookPermissions_v1;
 	import social.fb.FacebookPermissions_v2;
 	import social.fb.FacebookVersions;
 	import social.instagram.InstagramPlatform;
@@ -59,6 +57,7 @@ package
 		private var _webView:StageWebViewProxy;
 		private var _platformCombo:ComboBox;
 		private var _autoClear:CheckBox;
+		private var _nextPageButton:PushButton;
 		
 		
 		private var _callButtons:Dictionary;
@@ -67,6 +66,8 @@ package
 		private var _selectedPlatform:Platform;
 		private var _selectedCall:CallDesc;
 		private var _cancelAuthButton:PushButton;
+		
+		private var _nextPageHandler:Function;
 		
 		public function TestAPI()
 		{
@@ -89,7 +90,11 @@ package
 			_autoClear = new CheckBox(buttonRow, 0, 0, "Always clear on execute");
 			
 			_results = new TextArea(_resultCont);
-			_results.setSize(400, stage.stageHeight - 30);
+			_results.setSize(400, stage.stageHeight - 50);
+			
+			_nextPageButton = new PushButton(_resultCont, 0, 0, "Load Next Page", onLoadNextPage);
+			_nextPageButton.enabled = false;
+			_nextPageButton.setSize(400, 22);
 			
 			_resultCont.setSize(400, stage.stageHeight);
 			
@@ -101,17 +106,17 @@ package
 			_callCont = new VBox(_mainCont, 0, 30);
 			
 			/*var facebook:FacebookPlatform	= new FacebookPlatform([FacebookPermissions_v2.user_about_me, FacebookPermissions_v2.user_photos, FacebookPermissions_v2.read_mailbox], FacebookVersions.V2_1);
-			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "262050547226244");
-			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			facebook.setProp(FacebookPlatform.URL_CLIENT_ID, "402534763231208");
+			facebook.setProp(FacebookPlatform.URL_REDIRECT_URL, "http://stagedevelopversion.whitechimagine.com/imagine/mobile_redirect.php");
 			addPlatform(facebook);*/
 			
 			/*var key:String = "YOUR_DISTRIQT_DEV_KEY";
 			var facebookMobile:FacebookMobileDistriqt = new FacebookMobileDistriqt(key, [FacebookPermissions_v2.user_about_me, FacebookPermissions_v2.user_photos, FacebookPermissions_v2.read_mailbox], FacebookVersions.V2_1);
-			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			facebookMobile.init("402534763231208", "http://stagedevelopversion.whitechimagine.com/imagine/mobile_redirect.php");
 			addPlatform(facebookMobile.platform);*/
 			
 			var facebookMobile:FacebookMobileFP = new FacebookMobileFP([FacebookPermissions_v2.user_about_me, FacebookPermissions_v2.user_photos], FacebookVersions.V2_1);
-			facebookMobile.init("262050547226244", "https://devdevelopversion.whitechimagine.com/imagine/app_instagram_redirect.php");
+			facebookMobile.init("402534763231208", "http://stagedevelopversion.whitechimagine.com/imagine/mobile_redirect.php");
 			addPlatform(facebookMobile.platform);
 			
 			/*var facebook:Facebook = new Facebook([FacebookPermissions_v1.user_about_me, FacebookPermissions_v1.user_photos, FacebookPermissions_v1.read_mailbox], FacebookVersions.V2_1, false);
@@ -261,6 +266,16 @@ package
 				_results.textField.appendText("\n"+stringify(fail));
 			}
 			_results.textField.scrollV = _results.textField.maxScrollV;
+			
+			_nextPageHandler = null;
+			try{
+				_nextPageHandler = success["nextPage"];
+			}catch(e:Error){}
+			
+			_nextPageButton.enabled = (_nextPageHandler!=null);
+		}
+		private function onLoadNextPage(e:Event):void{
+			_nextPageHandler(onResult);
 		}
 		
 		private function setResultColour(colour:Number):void

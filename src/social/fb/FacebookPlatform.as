@@ -11,6 +11,7 @@ package social.fb
 	import social.core.UrlProvider;
 	import social.desc.ArgDesc;
 	import social.fb.vo.Album;
+	import social.fb.vo.AlbumPage;
 	import social.fb.vo.Comment;
 	import social.fb.vo.Image;
 	import social.fb.vo.Message;
@@ -51,7 +52,8 @@ package social.fb
 		
 		social static const CALL_ALBUM					:String		= "album";
 		social static const CALL_ALBUM_PICTURE			:String		= "albumPicture";
-		social static const CALL_ALBUM_PHOTOS			:String		= "albumPhotos";
+		social static const CALL_ALBUM_PHOTOS_FIRST		:String		= "albumPhotosFirst";
+		social static const CALL_ALBUM_PHOTOS_ALL		:String		= "albumPhotosAll";
 		social static const CALL_PICTURE				:String		= "picture";
 		social static const CALL_PICTURE_INFO			:String		= "pictureInfo";
 		
@@ -129,7 +131,13 @@ package social.fb
 				var onAlbums:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseAlbum), "data");
 				
 				var onPhoto:Function = HttpLoader.createHandler(parsePhoto);
-				var onPhotos:Function = HttpLoader.createPaginationHandler(HttpLoader.createArrParser(parsePhoto), "data", "paging.next");
+				
+				var photosParsers:Object = {"data":HttpLoader.createArrParser(parsePhoto)};
+				var albumParser:Function = HttpLoader.createParser(AlbumPage, photosParsers, {"data":"data", "paging.next":"nextPage"});
+				photosParsers["paging.next"] = HttpLoader.createPageLoader(albumParser);
+				var onAlbumPhotos:Function = HttpLoader.createHandler(albumParser);
+				
+				var onAllAlbumPhotos:Function = HttpLoader.createPaginationHandler(HttpLoader.createArrParser(parsePhoto), "data", "paging.next");
 				
 				var onMessage:Function = HttpLoader.createHandler(parseMessage);
 				var onMessages:Function = HttpLoader.createHandler(HttpLoader.createArrParser(parseMessage), "data");
@@ -149,7 +157,8 @@ package social.fb
 				onAlbums = handler;
 				
 				onPhoto = handler;
-				onPhotos = HttpLoader.createPaginationHandler(null, "data", "paging.next");
+				onAlbumPhotos = handler;
+				onAllAlbumPhotos = HttpLoader.createPaginationHandler(null, "data", "paging.next");
 				
 				onMessage = handler;
 				onMessages = handler;
@@ -217,7 +226,8 @@ package social.fb
 			addEndpointCall(GATEWAY_JSON, CALL_ALBUMS, s3, "me/albums", [], _callUrl, "Get photo albums.", onAlbums);
 			addEndpointCall(GATEWAY_JSON, CALL_ALBUM, s3, URL_OBJECT_ID, [objectId], _callUrl, "Get a photo album.", onAlbum);
 			addEndpointCall(GATEWAY_IMAGE, CALL_ALBUM_PICTURE, s3, URL_OBJECT_ID+"/picture", [objectId], _callUrl, "The cover photo of this album.", HttpLoader.loaderHandler);
-			addEndpointCall(GATEWAY_JSON, CALL_ALBUM_PHOTOS, s3, URL_OBJECT_ID+"/photos", [objectId], _callUrl, "Photos contained in this album.", onPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_ALBUM_PHOTOS_FIRST, s3, URL_OBJECT_ID+"/photos", [objectId], _callUrl, "A page of photos contained in this album.", onAlbumPhotos);
+			addEndpointCall(GATEWAY_JSON, CALL_ALBUM_PHOTOS_ALL, s3, URL_OBJECT_ID+"/photos", [objectId], _callUrl, "Photos contained in this album.", onAllAlbumPhotos);
 			addEndpointCall(GATEWAY_IMAGE, CALL_PICTURE, s3, "me/picture", [picType, picWidth, picHeight], _callUrl, "Get profile picture.", HttpLoader.loaderHandler);
 			addEndpointCall(GATEWAY_JSON, CALL_PICTURE_INFO, s3, "me/picture?redirect=false", [picType, picWidth, picHeight], _callUrl, "Get profile picture information.", onProfPic);
 			

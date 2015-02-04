@@ -103,8 +103,12 @@ package social.fb
 			_platform.doCall(FacebookPlatform.CALL_ALBUM_PICTURE, {objectId:albumId}, onComplete);
 		}
 		
+		public function getAlbumFirstPage( albumId:String, onComplete:Function=null ):void{
+			_platform.doCall(FacebookPlatform.CALL_ALBUM_PHOTOS_FIRST, {objectId:albumId}, onComplete);
+		}
+		
 		public function getAlbumPhotosAll( albumId:String, onComplete:Function=null):void{
-			_platform.doCall(FacebookPlatform.CALL_ALBUM_PHOTOS, {objectId:albumId}, onComplete);
+			_platform.doCall(FacebookPlatform.CALL_ALBUM_PHOTOS_ALL, {objectId:albumId}, onComplete);
 		}
 		
 		public function getUserAlbums( userId:String, onComplete:Function=null):void{

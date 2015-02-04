@@ -1,6 +1,6 @@
 package social.fb
 {
-	import social.social;
+	
 	
 
 	public class Facebook extends AbsFacebook

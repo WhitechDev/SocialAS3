@@ -206,7 +206,7 @@ package social.gateway
 							onComplete( res || true, null);
 						}
 					}else{
-						loadPage(nextPage, _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck, addTo, onComplete));
+						loadSimple(nextPage, _createPaginationHandler(parser, dataProp, pagProp, errorResponseCheck, addTo, onComplete));
 					}
 				}
 			}, args, true );
@@ -363,11 +363,21 @@ package social.gateway
 		
 		
 		/// PAGE LOADER
+		public static function createPageLoader(parser:Function):Function{
+			return function(pageUrl:String):Function{
+				return function (onComplete:Function):void{
+					loadSimple(pageUrl, onComplete, parser);
+				}
+			}
+		}
+		
 		private static var _pageLoaderToComplete:Dictionary = new Dictionary();
-		private static function loadPage( pageUrl:String, onComplete:Function=null ):void
+		private static var _pageLoaderToParser:Dictionary = new Dictionary();
+		public static function loadSimple( pageUrl:String, onComplete:Function=null, parser:Function=null ):void
 		{
 			var loader:URLLoader = takeLoader();
-			_pageLoaderToComplete[loader] = onComplete;
+			if(onComplete!=null)_pageLoaderToComplete[loader] = onComplete;
+			if(parser!=null)_pageLoaderToParser[loader] = parser;
 			loader.addEventListener( Event.COMPLETE, onDataSuccess);
 			loader.addEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
 			loader.addEventListener( SecurityErrorEvent.SECURITY_ERROR, onDataFailure);
@@ -378,8 +388,20 @@ package social.gateway
 		}
 		private static function onDataSuccess(e:Event):void{
 			var onComplete:Function = _pageLoaderToComplete[e.target];
+			var parser:Function = _pageLoaderToParser[e.target];
 			var loader:URLLoader = (e.target as URLLoader);
-			if(onComplete!=null)onComplete(loader.data, null);
+			var data:* = loader.data;
+			if(parser!=null){
+				try{
+					data = JSON.parse( data );
+				}catch(e:Error){}
+				if(data==null){
+					onComplete( null, "JSON parsing error");
+					return;
+				}
+				data = parser(data);
+			}
+			if(onComplete!=null)onComplete(data, null);
 			cleanUp(loader);
 		}
 		private static function onDataFailure(e:Event):void{
@@ -389,6 +411,7 @@ package social.gateway
 		}
 		private static function cleanUp(loader:URLLoader):void{
 			delete _pageLoaderToComplete[loader];
+			delete _pageLoaderToParser[loader];
 			loader.close();
 			loader.removeEventListener( Event.COMPLETE, onDataSuccess);
 			loader.removeEventListener( IOErrorEvent.IO_ERROR, onDataFailure);
